@@ -21,6 +21,7 @@ def CapLoss(y_pred, y_true):
 
 def EntropyLoss(y_pred, y_true):
     L = - y_true*nd.log2(y_pred) - (1-y_true) * nd.log2(1-y_pred)
+    # print (L, y_pred, y_true)
     return nd.mean(L)
 
 
@@ -30,11 +31,11 @@ if __name__ == "__main__":
     parser.add_argument('--batch_size', default=128, type=int)
     parser.add_argument('--epochs', default=100, type=int)
     args = parser.parse_args()
-    '''
     train_data, train_label = fetch_data()
     '''
     train_data = np.random.randint(0, high=config.MAX_WORDS, size=(10000, config.MAX_LENGTH))
-    train_label = np.random.randint(0, high=6, size=(10000, 6)) 
+    train_label = np.random.randint(0, high=2, size=(10000, 6)) 
+    '''
 
     data_iter = NDArrayIter(data= train_data[:-1000], label=train_label[:-1000], batch_size=32, shuffle=True)
     val_data_iter = NDArrayIter(data= train_data[-1000:], label=train_label[-1000:], batch_size=32, shuffle=False)
