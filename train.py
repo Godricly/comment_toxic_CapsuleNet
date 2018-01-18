@@ -1,8 +1,10 @@
 import sys
 import os
 import argparse
+sys.path.insert(0,'../incubator-mxnet/python')
 import mxnet as mx
 import numpy as np
+from preprocess import fetch_data
 from mxnet.gluon import Trainer
 from mxnet.gluon.data import DataLoader,Dataset
 from mxnet.io import NDArrayIter
@@ -23,15 +25,11 @@ if __name__ == "__main__":
     parser.add_argument('--batch_size', default=128, type=int)
     parser.add_argument('--epochs', default=100, type=int)
     args = parser.parse_args()
-    '''
-    train_raw, test_raw = get_raw_data()
-    train_data = get_data(train_raw)
-    test_data = get_data(test_raw)
-    train_label = get_label(train_raw)
-    train_data, test_data, word_index = process_data(train_data, test_data)
+    train_data, train_label = fetch_data()
     '''
     train_data = np.random.randint(0, high=config.MAX_WORDS, size=(10000, config.MAX_LENGTH))
     train_label = np.random.randint(0, high=6, size=(10000, 6)) 
+    '''
 
     data_iter = NDArrayIter(data= train_data[:-1000], label=train_label[:-1000], batch_size=32, shuffle=True)
     val_data_iter = NDArrayIter(data= train_data[-1000:], label=train_label[-1000:], batch_size=32, shuffle=False)

@@ -53,6 +53,8 @@ def train(train_data, test_data, net, loss, trainer,
                 print("Batch %d. Loss: %f, Train acc %f" % (
                 n, train_loss/n, train_acc/n))
         test_acc = evaluate_accuracy(test_data, net, ctx)
+        train_data.reset()
+        test_data.reset()
         print("Epoch %d. Loss: %f, Train acc %f, Test acc %f" % (
               epoch, train_loss/n, train_acc/n, test_acc))
 

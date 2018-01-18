@@ -55,12 +55,15 @@ def get_embed_matrix(embeddings_index, word_index):
             embedding_matrix[i] = embedding_vector
     return embedding_matrix
 
-if __name__ == '__main__':
+def fetch_data():
     train_raw, test_raw = get_raw_data()
     train_data = get_data(train_raw)
     test_data = get_data(test_raw)
     train_label = get_label(train_raw)
     train_data, test_data, word_index = process_data(train_data, test_data)
+    return train_data, train_label 
+
+if __name__ == '__main__':
     embedding_dict = get_word_embedding()
-    em = get_embed_matrix(embedding_dict, word_index)
-    print(em.shape)
+    # em = get_embed_matrix(embedding_dict, word_index)
+    # print(em.shape)
