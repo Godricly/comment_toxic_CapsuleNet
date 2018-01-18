@@ -43,12 +43,24 @@ def get_word_embedding():
         embeddings_index[word] = coefs
     return embeddings_index
 
+def get_embed_matrix(embeddings_index, word_index):
+    nb_words = min(config.MAX_WORDS, len(word_index))
+    embedding_matrix = np.zeros((nb_words, config.EMBEDDING_DIM))
+    for word, i in word_index.items():
+        if i >= config.MAX_WORDS:
+            continue
+        embedding_vector = embeddings_index.get(str.encode(word))
+        if embedding_vector is not None:
+            # words not found in embedding index will be all-zeros.
+            embedding_matrix[i] = embedding_vector
+    return embedding_matrix
+
 if __name__ == '__main__':
-    '''
     train_raw, test_raw = get_raw_data()
     train_data = get_data(train_raw)
     test_data = get_data(test_raw)
     train_label = get_label(train_raw)
     train_data, test_data, word_index = process_data(train_data, test_data)
-    '''
-    print(get_word_embedding())
+    embedding_dict = get_word_embedding()
+    em = get_embed_matrix(embedding_dict, word_index)
+    print(em.shape)
