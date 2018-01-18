@@ -14,7 +14,8 @@ def net(ctx):
     net.add(transpose(axes=(0,2,1)))
     net.add(PrimeConvCap(8,32, kernel_size=(9,1), padding=(4,0)))
     net.add(CapFullyBlock( 8*config.MAX_LENGTH, num_cap=6, input_units=32, units=16, context=ctx))
-    net.add(LengthBlock())
+    # net.add(LengthBlock())
+    net.add(nn.Dense(6, activation='sigmoid'))
     return net
 
 class transpose(nn.Block):

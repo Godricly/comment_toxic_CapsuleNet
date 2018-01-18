@@ -14,7 +14,8 @@ def try_gpu():
     return ctx
 
 def accuracy(output, label):
-    return nd.mean(output==label).asscalar()
+    L = -label*nd.log2(output) - (1-label) * nd.log2(1-output)
+    return nd.mean(L).asscalar()
 
 def _get_batch(batch, ctx):
     """return data and label on ctx"""

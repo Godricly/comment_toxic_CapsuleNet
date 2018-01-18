@@ -19,17 +19,22 @@ def CapLoss(y_pred, y_true):
         0.5 * (1 - y_true) * nd.square(nd.maximum(0., y_pred - 0.1))
     return nd.mean(nd.sum(L, 1))
 
+def EntropyLoss(y_pred, y_true):
+    L = - y_true*nd.log2(y_pred) - (1-y_true) * nd.log2(1-y_pred)
+    return nd.mean(L)
+
+
 if __name__ == "__main__":
     # setting the hyper parameters
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch_size', default=128, type=int)
     parser.add_argument('--epochs', default=100, type=int)
     args = parser.parse_args()
+    '''
     train_data, train_label = fetch_data()
     '''
     train_data = np.random.randint(0, high=config.MAX_WORDS, size=(10000, config.MAX_LENGTH))
     train_label = np.random.randint(0, high=6, size=(10000, 6)) 
-    '''
 
     data_iter = NDArrayIter(data= train_data[:-1000], label=train_label[:-1000], batch_size=32, shuffle=True)
     val_data_iter = NDArrayIter(data= train_data[-1000:], label=train_label[-1000:], batch_size=32, shuffle=False)
@@ -41,6 +46,6 @@ if __name__ == "__main__":
 
     print_batches = 1
     trainer = Trainer(net.collect_params(),'adam', {'learning_rate': 0.001})
-    utils.train(data_iter, val_data_iter, net, CapLoss,
+    utils.train(data_iter, val_data_iter, net, EntropyLoss,#CapLoss,
                 trainer, ctx, num_epochs=args.epochs, print_batches=print_batches)
     net.save_params('net.params')
