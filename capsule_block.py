@@ -7,11 +7,13 @@ from mxnet import initializer
 
 
 def squash(x, axis):
-    
     s_squared_norm = nd.sum(nd.square(x), axis, keepdims=True)
-    scale = s_squared_norm / (1 + s_squared_norm) / nd.sqrt(s_squared_norm + 1e-5)
-    return scale * x
-
+    # if s_squared_norm is really small, we will be in trouble
+    # so I removed the s_quare terms
+    # scale = s_squared_norm / ((1 + s_squared_norm) * nd.sqrt(s_squared_norm + 1e-9))
+    # return x * scale
+    scale = nd.sqrt(s_squared_norm + 1e-9)
+    return x / scale
 
 
 class CapConvBlock(nn.Block):

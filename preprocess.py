@@ -23,6 +23,9 @@ def get_label(raw_data):
               'insult', 'identity_hate']
     return raw_data[labels].values
 
+def get_id(raw_data):
+    return raw_data['id'].values
+
 def process_data(train_data, test_data):
     tokenizer = text.Tokenizer(num_words=config.MAX_WORDS)
     tokenizer.fit_on_texts(list(train_data))
@@ -62,6 +65,15 @@ def fetch_data():
     train_label = get_label(train_raw)
     train_data, test_data, word_index = process_data(train_data, test_data)
     return train_data, train_label 
+
+def fetch_test_data():
+    train_raw, test_raw = get_raw_data()
+    train_data = get_data(train_raw)
+    test_data = get_data(test_raw)
+    train_label = get_label(train_raw)
+    train_data, test_data, word_index = process_data(train_data, test_data)
+    test_id = get_id(test_raw)
+    return test_data, test_id
 
 if __name__ == '__main__':
     embedding_dict = get_word_embedding()

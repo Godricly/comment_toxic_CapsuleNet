@@ -1,2 +1,5 @@
 data
 __pycache__
+*.pyc
+*.txt
+*.params

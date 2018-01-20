@@ -29,7 +29,7 @@ if __name__ == "__main__":
     # setting the hyper parameters
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch_size', default=128, type=int)
-    parser.add_argument('--epochs', default=100, type=int)
+    parser.add_argument('--epochs', default=10, type=int)
     args = parser.parse_args()
     train_data, train_label = fetch_data()
     '''
@@ -37,16 +37,17 @@ if __name__ == "__main__":
     train_label = np.random.randint(0, high=2, size=(10000, 6)) 
     '''
 
-    data_iter = NDArrayIter(data= train_data[:-1000], label=train_label[:-1000], batch_size=32, shuffle=True)
-    val_data_iter = NDArrayIter(data= train_data[-1000:], label=train_label[-1000:], batch_size=32, shuffle=False)
+    data_iter = NDArrayIter(data= train_data[:-10000], label=train_label[:-10000], batch_size=32, shuffle=True)
+    val_data_iter = NDArrayIter(data= train_data[-10000:], label=train_label[-10000:], batch_size=32, shuffle=False)
 
-    ctx = mx.cpu()
+    ctx = mx.gpu(7)
     net = net(ctx)
     net.initialize(mx.init.Xavier(),ctx=ctx)
     net.collect_params().reset_ctx(ctx)
 
-    print_batches = 1
+    print_batches = 1000
     trainer = Trainer(net.collect_params(),'adam', {'learning_rate': 0.001})
+    # trainer = Trainer(net.collect_params(),'RMSProp', {'learning_rate': 0.001})
     utils.train(data_iter, val_data_iter, net, EntropyLoss,#CapLoss,
                 trainer, ctx, num_epochs=args.epochs, print_batches=print_batches)
     net.save_params('net.params')
