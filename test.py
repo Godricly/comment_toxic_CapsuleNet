@@ -1,7 +1,6 @@
 import sys
 import os
 import argparse
-sys.path.insert(0,'../incubator-mxnet/python')
 import mxnet as mx
 import numpy as np
 from preprocess import fetch_test_data
@@ -22,12 +21,14 @@ if __name__ == "__main__":
 
     # ctx = mx.cpu()# gpu(7)
     ctx = mx.gpu(7)
-    net = net(ctx)
+    net = net()
+    net.collect_params().reset_ctx(ctx)
     net.load_params('net.params', ctx)
 
     test_data, test_id = fetch_test_data()
     data_iter = NDArrayIter(data= test_data, batch_size=1, shuffle=False)
     with open('result.txt','w') as f:
+        f.write('id,toxic,severe_toxic,obscene,threat,insult,identity_hate\n')
         for i, d in enumerate(data_iter):
             print (i)
             output=net(d.data[0].as_in_context(ctx))

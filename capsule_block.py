@@ -33,12 +33,11 @@ class CapConvBlock(nn.Block):
         
 class CapFullyBlock(nn.Block):
     def __init__(self, num_locations, num_cap, input_units, units,
-                 context, route_num=3, **kwargs):
+                 route_num=3, **kwargs):
         super(CapFullyBlock, self).__init__(**kwargs)
         self.route_num = route_num
         self.num_cap = num_cap
         self.units = units
-        self.ctx = context
         self.num_locations = num_locations
         self.w_ij = self.params.get(
              'weight', shape=(input_units, units, self.num_cap, self.num_locations)

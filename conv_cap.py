@@ -25,6 +25,7 @@ class PrimeConvCap(nn.Block):
         conv_out = nd.expand_dims(self.cap(x), axis=2)
         conv_out = conv_out.reshape((0,self.num_cap,-1,0,0))
         conv_out = squash(conv_out, 2)
+        # print conv_out.shape
         return conv_out
 
 
@@ -87,6 +88,7 @@ class AdvConvCap(nn.Block):
                 update_term = nd.sum(u_no_gradient*v1, axis=3, keepdims=True)
                 b_mat = b_mat + update_term
         # print v.shape
+        # v = nd.transpose(v, (0,2,1,3,4))
         return v
 '''
 class AdvFullyCap(nn.Block):

@@ -3,3 +3,5 @@ __pycache__
 *.pyc
 *.txt
 *.params
+*.csv
+*.swp

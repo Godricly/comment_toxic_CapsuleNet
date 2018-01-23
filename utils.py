@@ -21,6 +21,7 @@ def _get_batch(batch, ctx):
     """return data and label on ctx"""
     data = batch.data[0]
     label = batch.label[0]
+    # data, label = gluon.utils.split_and_load(batch, ctx)
     return data.as_in_context(ctx), label.as_in_context(ctx)
 
 

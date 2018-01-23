@@ -52,7 +52,8 @@ def get_embed_matrix(embeddings_index, word_index):
     for word, i in word_index.items():
         if i >= config.MAX_WORDS:
             continue
-        embedding_vector = embeddings_index.get(str.encode(word))
+        # embedding_vector = embeddings_index.get(str.encode(word))
+        embedding_vector = embeddings_index.get(word)
         if embedding_vector is not None:
             # words not found in embedding index will be all-zeros.
             embedding_matrix[i] = embedding_vector
@@ -64,7 +65,7 @@ def fetch_data():
     test_data = get_data(test_raw)
     train_label = get_label(train_raw)
     train_data, test_data, word_index = process_data(train_data, test_data)
-    return train_data, train_label 
+    return train_data, train_label, word_index
 
 def fetch_test_data():
     train_raw, test_raw = get_raw_data()
@@ -76,6 +77,8 @@ def fetch_test_data():
     return test_data, test_id
 
 if __name__ == '__main__':
-    embedding_dict = get_word_embedding()
+    # embedding_dict = get_word_embedding()
+    data, label, word_index = fetch_data()
+    print np.sum(label, axis=0).astype(float) / label.shape[0]
     # em = get_embed_matrix(embedding_dict, word_index)
     # print(em.shape)
