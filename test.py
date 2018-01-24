@@ -9,7 +9,7 @@ from mxnet.gluon.data import DataLoader,Dataset
 from mxnet.io import NDArrayIter
 from mxnet.ndarray import array
 from mxnet import nd
-from net import net
+from net import net_define, net_define_eu
 import config
 
 if __name__ == "__main__":
@@ -17,11 +17,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch_size', default=128, type=int)
     parser.add_argument('--epochs', default=100, type=int)
+    parser.add_argument('--gpu', default=0, type=int)
     args = parser.parse_args()
 
     # ctx = mx.cpu()# gpu(7)
-    ctx = mx.gpu(7)
-    net = net()
+    ctx = mx.gpu(args.gpu)
+    net = net_define_eu()
     net.collect_params().reset_ctx(ctx)
     net.load_params('net.params', ctx)
 

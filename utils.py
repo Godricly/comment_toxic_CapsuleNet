@@ -52,8 +52,9 @@ def train(train_data, test_data, net, loss, trainer,
             train_acc += accuracy(output, label)
             n = i + 1
             if print_batches and n % print_batches == 0:
-                print("Batch %d. Loss: %f, Train acc %f" % (
-                n, train_loss/n, train_acc/n))
+                test_acc = evaluate_accuracy(test_data, net, ctx)
+                print("Batch %d. Loss: %f, Train acc %f, Test acc %f" % (
+                n, train_loss/n, train_acc/n, test_acc))
         test_acc = evaluate_accuracy(test_data, net, ctx)
         train_data.reset()
         test_data.reset()

@@ -54,6 +54,7 @@ class CapFullyBlock(nn.Block):
         x_expand = nd.expand_dims(nd.expand_dims(x, axis=2),2)
         w_expand = nd.repeat(nd.expand_dims(self.w_ij.data(),axis=0), repeats=x.shape[0], axis=0)
         u_ = w_expand*x_expand
+        # u_ = nd.abs(w_expand - x_expand)
         u = nd.sum(u_, axis = 1)
         u_no_gradient = nd.stop_gradient(u)
         for i in range(self.route_num):
@@ -67,6 +68,51 @@ class CapFullyBlock(nn.Block):
             if i != self.route_num - 1:
                 update_term = nd.sum(u_no_gradient*v1, axis=1, keepdims=True)
                 b_mat = b_mat + update_term
+        return v
+
+
+class CapFullyEuBlock(nn.Block):
+    def __init__(self, num_locations, num_cap, input_units, units,
+                 route_num=3, **kwargs):
+        super(CapFullyEuBlock, self).__init__(**kwargs)
+        self.route_num = route_num
+        self.num_cap = num_cap
+        self.units = units
+        self.num_locations = num_locations
+        self.w_ij = self.params.get(
+             'weight', shape=(input_units, units, self.num_cap, self.num_locations)
+             ,init=init.Xavier()) 
+
+    def forward(self, x):
+        # reshape x into [batch_size, channel, num_previous_cap]
+        x_reshape = nd.transpose(x,(0,2,1,3,4)).reshape((0,0,-1))
+        return self.Route(x_reshape)
+
+    def Route(self, x):
+        # b_mat = nd.repeat(self.b_mat.data(), repeats=x.shape[0], axis=0)#nd.stop_gradient(nd.repeat(self.b_mat.data(), repeats=x.shape[0], axis=0))
+        b_mat = nd.zeros((x.shape[0],1,self.num_cap, self.num_locations), ctx=x.context)
+        x_expand = nd.expand_dims(nd.expand_dims(x, axis=2),2)
+        w_expand = nd.repeat(nd.expand_dims(self.w_ij.data(),axis=0), repeats=x.shape[0], axis=0)
+        u_ = w_expand*x_expand
+        u = nd.sum(u_, axis = 1)
+        # u_ = nd.square(w_expand - x_expand)
+        # u = -nd.sum(u_, axis = 1)
+        u_no_gradient = nd.stop_gradient(u)
+        for i in range(self.route_num):
+            # c_mat = nd.softmax(b_mat, axis=2)
+            c_mat = nd.sigmoid(b_mat)
+            if i == self.route_num -1:
+                s = nd.sum(u * c_mat, axis=-1)
+            else:
+                s = nd.sum(u_no_gradient * c_mat, axis=-1)
+            v = squash(s, 1)
+            if i != self.route_num - 1:
+                v1 = nd.expand_dims(v, axis=-1)
+                update_term = nd.sum(u_no_gradient*v1, axis=1, keepdims=True)
+                b_mat = b_mat + update_term
+                # b_mat = update_term
+            # else:
+            #    v = s
         return v
 
 class LengthBlock(nn.Block):

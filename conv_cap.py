@@ -22,6 +22,7 @@ class PrimeConvCap(nn.Block):
                              padding=padding, strides=strides)
 
     def forward(self, x):
+        # print x.shape
         conv_out = nd.expand_dims(self.cap(x), axis=2)
         conv_out = conv_out.reshape((0,self.num_cap,-1,0,0))
         conv_out = squash(conv_out, 2)
