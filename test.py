@@ -27,12 +27,15 @@ if __name__ == "__main__":
     net.load_params('net.params', ctx)
 
     test_data, test_id = fetch_test_data()
-    data_iter = NDArrayIter(data= test_data, batch_size=1, shuffle=False)
+    data_iter = NDArrayIter(data= test_data, batch_size=args.batch_size, shuffle=False)
     with open('result.txt','w') as f:
         f.write('id,toxic,severe_toxic,obscene,threat,insult,identity_hate\n')
         for i, d in enumerate(data_iter):
-            print (i)
-            output=net(d.data[0].as_in_context(ctx))
-            str_out = ','.join([str(test_id[i])] + [str(v) for v in output[0].asnumpy()])+'\n'
-            f.write(str_out)
+            print(i)
+            output=net(d.data[0].as_in_context(ctx)).asnumpy()
+            for j in range(args.batch_size):
+                if i*args.batch_size + j < test_id.shape[0]:
+                    str_out = ','.join([str(test_id[i*args.batch_size+j])] + [str(v) for v in output[j]])+'\n'
+                    f.write(str_out)
+
     

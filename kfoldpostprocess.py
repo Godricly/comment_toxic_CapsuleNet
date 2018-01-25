@@ -2,8 +2,7 @@ import pandas as pd
 import numpy as np
 from preprocess import get_label
 
-
-kfold=5
+kfold=10
 for i in range(kfold):
     result_path = 'result'+str(i)+'.csv'
     result = pd.read_csv(result_path)
@@ -19,3 +18,11 @@ labels = ['toxic', 'severe_toxic',
           'insult', 'identity_hate']
 result[labels] = mean_result
 result.to_csv('result_kfold.csv', index=False)
+
+PROBABILITIES_NORMALIZE_COEFFICIENT = 1.4
+mean_result **= PROBABILITIES_NORMALIZE_COEFFICIENT
+# mean_result =np.log(mean_result)
+# mean_result -=0.5
+# mean_result =np.exp(mean_result)
+result[labels] = mean_result
+result.to_csv('postprocessing1.csv', index=False)

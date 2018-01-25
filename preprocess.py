@@ -1,4 +1,5 @@
 import os
+import re
 import numpy as np
 import pandas as pd
 from keras.preprocessing import text, sequence
@@ -15,7 +16,45 @@ def get_raw_data():
     return train_data, test_data
 
 def get_data(raw_data):
-    return raw_data['comment_text'].fillna("_na_").values
+     raw_value = raw_data['comment_text'].fillna("_na_").values
+     processed_data = []
+     for v in raw_value:
+         processed_data.append(text_to_wordlist(v))
+     return processed_data 
+     '''
+     return list(raw_value)
+     '''
+
+
+def text_to_wordlist(text, remove_stopwords=False, stem_words=False):
+    # Clean the text, with the option to remove stopwords and to stem words.
+    # Convert words to lower case and split them
+
+    # Regex to remove all Non-Alpha Numeric and space
+    special_character_removal = re.compile(r'[^a-z\d ]', re.IGNORECASE)
+    # regex to replace all numerics
+    replace_numbers = re.compile(r'\d+', re.IGNORECASE)
+
+    text = text.lower().split()
+    # Optionally, remove stop words
+    if remove_stopwords:
+        stops = set(stopwords.words("english"))
+        text = [w for w in text if not w in stops]
+
+    text = " ".join(text)
+    # Remove Special Characters
+    text = special_character_removal.sub('', text)
+    # Replace Numbers
+    text = replace_numbers.sub('n', text)
+    # Optionally, shorten words to their stems
+    if stem_words:
+        text = text.split()
+        stemmer = SnowballStemmer('english')
+        stemmed_words = [stemmer.stem(word) for word in text]
+        text = " ".join(stemmed_words)
+    # Return a list of words
+    return (text)
+
 
 def get_label(raw_data):
     labels = ['toxic', 'severe_toxic',
@@ -28,7 +67,7 @@ def get_id(raw_data):
 
 def process_data(train_data, test_data):
     tokenizer = text.Tokenizer(num_words=config.MAX_WORDS)
-    tokenizer.fit_on_texts(list(train_data))
+    tokenizer.fit_on_texts(train_data+test_data)
     train_tokenized = tokenizer.texts_to_sequences(train_data)
     test_tokenized = tokenizer.texts_to_sequences(test_data)
     train_data = sequence.pad_sequences(train_tokenized, maxlen = config.MAX_LENGTH)

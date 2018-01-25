@@ -9,7 +9,7 @@ from mxnet.gluon.data import DataLoader,Dataset
 from mxnet.io import NDArrayIter
 from mxnet.ndarray import array
 from mxnet import nd
-from net import net_define
+from net import net_define, net_define_eu
 from sklearn.model_selection import KFold
 import utils
 import config
@@ -54,7 +54,7 @@ if __name__ == "__main__":
         val_data_iter = NDArrayIter(data= xte, label=yte, batch_size=args.batch_size, shuffle=False)
 
         ctx = mx.gpu(args.gpu)
-        net = net_define()
+        net = net_define_eu()
         print net.collect_params()
         net.collect_params().reset_ctx(ctx)
         net.collect_params()['sequential'+str(i)+ '_embedding0_weight'].set_data(em)
