@@ -39,19 +39,19 @@ if __name__ == "__main__":
     train_data = np.random.randint(0, high=config.MAX_WORDS, size=(10000, config.MAX_LENGTH))
     train_label = np.random.randint(0, high=2, size=(10000, 6)) 
     '''
-    ctx = mx.gpu(args.gpu)
+    ctx = [mx.gpu(2), mx.gpu(3), mx.gpu(4), mx.gpu(5)]
     net = net_define_eu()
     # net.initialize(mx.init.Xavier(),ctx=ctx)
 
-    train_data, train_label, word_index = fetch_data(True)
+    train_data, train_label, word_index = fetch_data()
     embedding_dict = get_word_embedding()
     em = get_embed_matrix(embedding_dict, word_index)
-    net.collect_params().reset_ctx(ctx)
-    print 'copy array'
+    # print 'copy array'
     em = array(em, ctx=mx.cpu())
-    print 'copy array done'
-    
+    # print 'copy array done'
     net.collect_params()['sequential0_embedding0_weight'].set_data(em)
+    net.collect_params().reset_ctx(ctx)
+    print net.collect_params()
 
     print_batches = 1000
     shuffle_idx = np.random.permutation(train_data.shape[0])
@@ -63,6 +63,8 @@ if __name__ == "__main__":
     val_data_iter = NDArrayIter(data= train_data[-10000:], label=train_label[-10000:], batch_size=args.batch_size, shuffle=False)
     trainer = Trainer(net.collect_params(),'adam', {'learning_rate': 0.001})
     # trainer = Trainer(net.collect_params(),'RMSProp', {'learning_rate': 0.001})
-    utils.train(data_iter, val_data_iter, net, EntropyLoss,
+    # utils.train(data_iter, val_data_iter, net, EntropyLoss,
+    #             trainer, ctx, num_epochs=args.epochs, print_batches=print_batches)
+    utils.train_multi(data_iter, val_data_iter, net, EntropyLoss,
                 trainer, ctx, num_epochs=args.epochs, print_batches=print_batches)
     net.save_params('net.params')

@@ -85,14 +85,16 @@ class CapFullyEuBlock(nn.Block):
 
     def forward(self, x):
         # reshape x into [batch_size, channel, num_previous_cap]
+        # print x.shape
         x_reshape = nd.transpose(x,(0,2,1,3,4)).reshape((0,0,-1))
         return self.Route(x_reshape)
 
     def Route(self, x):
+        # print x.context
         # b_mat = nd.repeat(self.b_mat.data(), repeats=x.shape[0], axis=0)#nd.stop_gradient(nd.repeat(self.b_mat.data(), repeats=x.shape[0], axis=0))
         b_mat = nd.zeros((x.shape[0],1,self.num_cap, self.num_locations), ctx=x.context)
         x_expand = nd.expand_dims(nd.expand_dims(x, axis=2),2)
-        w_expand = nd.repeat(nd.expand_dims(self.w_ij.data(),axis=0), repeats=x.shape[0], axis=0)
+        w_expand = nd.repeat(nd.expand_dims(self.w_ij.data(x.context),axis=0), repeats=x.shape[0], axis=0)
         u_ = w_expand*x_expand
         u = nd.sum(u_, axis = 1)
         # u_ = nd.square(w_expand - x_expand)

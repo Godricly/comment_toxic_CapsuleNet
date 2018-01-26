@@ -39,7 +39,7 @@ if __name__ == "__main__":
     parser.add_argument('--print_batches', default=1000, type=int)
     args = parser.parse_args()
 
-    train_data, train_label, word_index = fetch_data()
+    train_data, train_label, word_index = fetch_data(True)
     embedding_dict = get_word_embedding()
     em = get_embed_matrix(embedding_dict, word_index)
     em = array(em, ctx=mx.cpu())
@@ -54,7 +54,7 @@ if __name__ == "__main__":
         val_data_iter = NDArrayIter(data= xte, label=yte, batch_size=args.batch_size, shuffle=False)
 
         ctx = mx.gpu(args.gpu)
-        net = net_define_eu()
+        net = net_define()
         print net.collect_params()
         net.collect_params().reset_ctx(ctx)
         net.collect_params()['sequential'+str(i)+ '_embedding0_weight'].set_data(em)

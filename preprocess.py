@@ -5,15 +5,9 @@ import pandas as pd
 from keras.preprocessing import text, sequence
 import config
 
-def get_raw_data():
-    data_path = 'data'
-    train = 'train.csv'
-    test = 'test.csv'
-    train_path = os.path.join(data_path, train)
-    test_path = os.path.join(data_path, test)
-    train_data = pd.read_csv(train_path)
-    test_data = pd.read_csv(test_path)
-    return train_data, test_data
+def get_raw_data(path):
+    data = pd.read_csv(path)
+    return data
 
 def get_data(raw_data):
      raw_value = raw_data['comment_text'].fillna("_na_").values
@@ -98,19 +92,54 @@ def get_embed_matrix(embeddings_index, word_index):
             embedding_matrix[i] = embedding_vector
     return embedding_matrix
 
-def fetch_data():
-    train_raw, test_raw = get_raw_data()
+def fetch_data(aug=False):
+    data_path = 'data'
+    train = 'train.csv'
+    test = 'test.csv'
+    train_raw = get_raw_data(os.path.join(data_path, train))
+    test_raw = get_raw_data(os.path.join(data_path, test))
     train_data = get_data(train_raw)
     test_data = get_data(test_raw)
     train_label = get_label(train_raw)
+
+    if aug:
+        train_de = 'train_de.csv'
+        train_fr = 'train_fr.csv'
+        train_es = 'train_es.csv'
+        train_de_raw = get_raw_data(os.path.join(data_path, train_de))
+        train_de_data = get_data(train_de_raw)
+        train_de_label = get_label(train_de_raw)
+        train_es_raw = get_raw_data(os.path.join(data_path, train_es))
+        train_es_data = get_data(train_es_raw)
+        train_es_label = get_label(train_es_raw)
+        train_fr_raw = get_raw_data(os.path.join(data_path, train_fr))
+        train_fr_data = get_data(train_fr_raw)
+        train_fr_label = get_label(train_fr_raw)
+        train_data = train_data + train_de_data + train_fr_data + train_es_data
+        train_label = np.vstack((train_label, train_de_label, train_fr_label, train_es_label))
+
     train_data, test_data, word_index = process_data(train_data, test_data)
     return train_data, train_label, word_index
 
-def fetch_test_data():
-    train_raw, test_raw = get_raw_data()
+def fetch_test_data(aug=False):
+    data_path = 'data'
+    train = 'train.csv'
+    test = 'test.csv'
+    train_raw = get_raw_data(os.path.join(data_path, train))
+    test_raw = get_raw_data(os.path.join(data_path, test))
     train_data = get_data(train_raw)
     test_data = get_data(test_raw)
-    train_label = get_label(train_raw)
+    if aug:
+        train_de = 'train_de.csv'
+        train_fr = 'train_fr.csv'
+        train_es = 'train_es.csv'
+        train_de_raw = get_raw_data(os.path.join(data_path, train_de))
+        train_de_data = get_data(train_de_raw)
+        train_es_raw = get_raw_data(os.path.join(data_path, train_es))
+        train_es_data = get_data(train_es_raw)
+        train_fr_raw = get_raw_data(os.path.join(data_path, train_fr))
+        train_fr_data = get_data(train_fr_raw)
+        train_data = train_data + train_de_data + train_fr_data + train_es_data
     train_data, test_data, word_index = process_data(train_data, test_data)
     test_id = get_id(test_raw)
     return test_data, test_id
