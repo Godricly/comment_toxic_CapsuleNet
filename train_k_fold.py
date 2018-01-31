@@ -32,14 +32,15 @@ def EntropyLoss1(y_pred, y_true):
 if __name__ == "__main__":
     # setting the hyper parameters
     parser = argparse.ArgumentParser()
-    parser.add_argument('--batch_size', default=128, type=int)
-    parser.add_argument('--epochs', default=2, type=int)
+    parser.add_argument('--batch_size', default=256, type=int)
+    parser.add_argument('--epochs', default=3, type=int)
     parser.add_argument('--gpu', default=0, type=int)
-    parser.add_argument('--kfold', default=5, type=int)
-    parser.add_argument('--print_batches', default=1000, type=int)
+    parser.add_argument('--kfold', default=10, type=int)
+    parser.add_argument('--print_batches', default=100, type=int)
     args = parser.parse_args()
 
-    train_data, train_label, word_index = fetch_data(True)
+    train_data, train_label, word_index = fetch_data(False)
+    print train_data.shape
     embedding_dict = get_word_embedding()
     em = get_embed_matrix(embedding_dict, word_index)
     em = array(em, ctx=mx.cpu())
@@ -53,12 +54,13 @@ if __name__ == "__main__":
         data_iter =     NDArrayIter(data= xtr, label=ytr, batch_size=args.batch_size, shuffle=True)
         val_data_iter = NDArrayIter(data= xte, label=yte, batch_size=args.batch_size, shuffle=False)
 
-        ctx = mx.gpu(args.gpu)
-        net = net_define()
-        print net.collect_params()
+        ctx = [mx.gpu(0), mx.gpu(1)]
+        # ctx = mx.gpu(args.gpu)
+        net = net_define_eu()
+        # print net.collect_params()
         net.collect_params().reset_ctx(ctx)
         net.collect_params()['sequential'+str(i)+ '_embedding0_weight'].set_data(em)
         trainer = Trainer(net.collect_params(),'adam', {'learning_rate': 0.001})
-        utils.train(data_iter, val_data_iter, net, EntropyLoss,
-                trainer, ctx, num_epochs=args.epochs, print_batches=args.print_batches)
-        net.save_params('net'+str(i)+'.params')
+        utils.train_multi(data_iter, val_data_iter, i, net, EntropyLoss,
+                    trainer, ctx, num_epochs=args.epochs, print_batches=args.print_batches)
+        # net.save_params('net'+str(i)+'.params')

@@ -76,9 +76,10 @@ def train(train_data, test_data, net, loss, trainer,
         print("Epoch %d. Loss: %f, Train acc %f, Test Loss %f" % (
               epoch, train_loss/n, train_acc/n, test_acc))
 
-def train_multi(train_data, test_data, net, loss, trainer,
+def train_multi(train_data, test_data, iteration, net, loss, trainer,
           ctx, num_epochs, print_batches=None):
     """Train a network"""
+    min_loss = 100000
     for epoch in range(num_epochs):
         train_loss = 0.
         train_acc = 0.
@@ -97,8 +98,15 @@ def train_multi(train_data, test_data, net, loss, trainer,
                 test_acc = evaluate_accuracy_multi(test_data, net, ctx)
                 print("Batch %d. Loss: %f, Test Loss %f" % (
                 n, train_loss/n, test_acc))
+                if test_acc < min_loss:
+                    min_loss = test_acc
+                    net.save_params('net'+str(iteration)+'.params')
+          
         test_acc = evaluate_accuracy_multi(test_data, net, ctx)
         train_data.reset()
         print("Epoch %d. Loss: %f, Test Loss %f" % (
               epoch, train_loss/n, test_acc))
+        if test_acc < min_loss:
+            min_loss = test_acc
+            net.save_params('net'+str(iteration)+'.params')
 

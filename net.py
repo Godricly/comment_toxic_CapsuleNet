@@ -3,7 +3,7 @@ from mxnet import init
 from mxnet import nd
 from mxnet.gluon import nn,rnn
 from conv_cap import PrimeConvCap, AdvConvCap
-from capsule_block import CapFullyBlock, CapFullyEuBlock
+from capsule_block import CapFullyBlock, CapFullyEuBlock, CapFullyNGBlock
 import config
 
 def net_define():
@@ -29,6 +29,18 @@ def net_define_eu():
     net = nn.Sequential()
     with net.name_scope():
         net.add(nn.Embedding(config.MAX_WORDS, config.EMBEDDING_DIM))
+        net.add(rnn.GRU(128,layout='NTC',bidirectional=True, num_layers=2, dropout=0.2))
+        net.add(transpose(axes=(0,2,1)))
+        net.add(nn.MaxPool2D(pool_size=(config.MAX_LENGTH,1)))
+        net.add(PrimeConvCap(8,32, kernel_size=(1,1), padding=(0,0)))
+        # net.add(PrimeConvCap(8,32, kernel_size=(1,1), padding=(0,0)))
+        # net.add(CapFullyBlock(8*(config.MAX_LENGTH), num_cap=32, input_units=32, units=16, route_num=3))
+        net.add(CapFullyNGBlock(8, num_cap=16, input_units=32, units=32, route_num=3))
+        # net.add(PrimeConvCap(8,32, kernel_size=(1,1), padding=(0,0)))
+        net.add(nn.Dropout(0.2))
+        net.add(nn.Dense(6, activation='sigmoid'))
+        '''
+        net.add(nn.Embedding(config.MAX_WORDS, config.EMBEDDING_DIM))
         net.add(rnn.GRU(128,layout='NTC',bidirectional=True, num_layers=1, dropout=0.2))
         net.add(transpose(axes=(0,2,1)))
         net.add(PrimeConvCap(8,32, kernel_size=(9,1), padding=(0,0)))
@@ -36,6 +48,7 @@ def net_define_eu():
         net.add(CapFullyEuBlock(8*(config.MAX_LENGTH-8), num_cap=16, input_units=32, units=16, route_num=3))
         net.add(nn.Dropout(0.2))
         net.add(nn.Dense(6, activation='sigmoid'))
+        '''
     net.initialize(init=init.Xavier())
     return net
 

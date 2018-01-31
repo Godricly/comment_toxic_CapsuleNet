@@ -43,7 +43,7 @@ if __name__ == "__main__":
     net = net_define_eu()
     # net.initialize(mx.init.Xavier(),ctx=ctx)
 
-    train_data, train_label, word_index = fetch_data()
+    train_data, train_label, word_index = fetch_data(True)
     embedding_dict = get_word_embedding()
     em = get_embed_matrix(embedding_dict, word_index)
     # print 'copy array'

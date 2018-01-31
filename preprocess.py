@@ -7,6 +7,8 @@ import config
 
 def get_raw_data(path):
     data = pd.read_csv(path)
+    process_data = get_data(data)
+    data['comment_text'] = process_data
     return data
 
 def get_data(raw_data):
@@ -30,6 +32,7 @@ def text_to_wordlist(text, remove_stopwords=False, stem_words=False):
     replace_numbers = re.compile(r'\d+', re.IGNORECASE)
 
     text = text.lower().split()
+    # text = text.split()
     # Optionally, remove stop words
     if remove_stopwords:
         stops = set(stopwords.words("english"))
@@ -70,7 +73,8 @@ def process_data(train_data, test_data):
 
 def get_word_embedding():
     data_path = 'data'
-    EMBEDDING_FILE = os.path.join(data_path, 'glove.840B.300d.txt')
+    # EMBEDDING_FILE = os.path.join(data_path, 'glove.840B.300d.txt')
+    EMBEDDING_FILE = os.path.join(data_path, 'crawl-300d-2M.vec')
     embeddings_index = {}
     for line in open(EMBEDDING_FILE, "rb"):
         values = line.split()
@@ -98,25 +102,27 @@ def fetch_data(aug=False):
     test = 'test.csv'
     train_raw = get_raw_data(os.path.join(data_path, train))
     test_raw = get_raw_data(os.path.join(data_path, test))
-    train_data = get_data(train_raw)
     test_data = get_data(test_raw)
-    train_label = get_label(train_raw)
 
     if aug:
         train_de = 'train_de.csv'
         train_fr = 'train_fr.csv'
         train_es = 'train_es.csv'
         train_de_raw = get_raw_data(os.path.join(data_path, train_de))
-        train_de_data = get_data(train_de_raw)
-        train_de_label = get_label(train_de_raw)
         train_es_raw = get_raw_data(os.path.join(data_path, train_es))
-        train_es_data = get_data(train_es_raw)
-        train_es_label = get_label(train_es_raw)
         train_fr_raw = get_raw_data(os.path.join(data_path, train_fr))
-        train_fr_data = get_data(train_fr_raw)
-        train_fr_label = get_label(train_fr_raw)
-        train_data = train_data + train_de_data + train_fr_data + train_es_data
-        train_label = np.vstack((train_label, train_de_label, train_fr_label, train_es_label))
+        train_raw = pd.concat([train_raw, train_de_raw, train_es_raw, train_fr_raw]).drop_duplicates('comment_text')
+    train_data = list(train_raw['comment_text'].fillna("_na_").values)
+    train_label = get_label(train_raw)
+        # print train_raw
+        # train_de_data = get_data(train_de_raw)
+        # train_de_label = get_label(train_de_raw)
+        #train_es_data = get_data(train_es_raw)
+        # train_es_label = get_label(train_es_raw)
+        # train_fr_data = get_data(train_fr_raw)
+        # train_fr_label = get_label(train_fr_raw)
+        # train_data = train_data + train_de_data + train_fr_data + train_es_data
+        # train_label = np.vstack((train_label, train_de_label, train_fr_label, train_es_label))
 
     train_data, test_data, word_index = process_data(train_data, test_data)
     return train_data, train_label, word_index
@@ -134,12 +140,10 @@ def fetch_test_data(aug=False):
         train_fr = 'train_fr.csv'
         train_es = 'train_es.csv'
         train_de_raw = get_raw_data(os.path.join(data_path, train_de))
-        train_de_data = get_data(train_de_raw)
         train_es_raw = get_raw_data(os.path.join(data_path, train_es))
-        train_es_data = get_data(train_es_raw)
         train_fr_raw = get_raw_data(os.path.join(data_path, train_fr))
-        train_fr_data = get_data(train_fr_raw)
-        train_data = train_data + train_de_data + train_fr_data + train_es_data
+        train_raw = pd.concat([train_raw, train_de_raw, train_es_raw, train_fr_raw]).drop_duplicates('comment_text')
+    train_data = list(train_raw['comment_text'].fillna("_na_").values)
     train_data, test_data, word_index = process_data(train_data, test_data)
     test_id = get_id(test_raw)
     return test_data, test_id
