@@ -45,6 +45,7 @@ if __name__ == "__main__":
     net.collect_params().reset_ctx(ctx)
     em = array(em, ctx=mx.cpu())
     net.collect_params()['sequential0_embedding0_weight'].set_data(em)
+    net.collect_params()['sequential0_embedding0_weight'].setattr('grad_req', 'null')
 
     print_batches = 100
     shuffle_idx = np.random.permutation(train_data.shape[0])

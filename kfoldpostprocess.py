@@ -10,11 +10,11 @@ for i in range(kfold):
     if i==0:
         mean_result = pred_label
     else:
-        # mean_result *= pred_label
-        mean_result += pred_label
+        mean_result *= pred_label
+        # mean_result += pred_label
 
-# mean_result = np.power(mean_result, 1.0/kfold)
-mean_result = mean_result / kfold
+mean_result = np.power(mean_result, 1.0/kfold)
+# mean_result = mean_result / kfold
 
 labels = ['toxic', 'severe_toxic',
           'obscene', 'threat',

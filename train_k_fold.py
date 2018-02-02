@@ -60,6 +60,7 @@ if __name__ == "__main__":
         # print net.collect_params()
         net.collect_params().reset_ctx(ctx)
         net.collect_params()['sequential'+str(i)+ '_embedding0_weight'].set_data(em)
+        net.collect_params()['sequential'+str(i)+ '_embedding0_weight'].grad_req = 'null'
         trainer = Trainer(net.collect_params(),'adam', {'learning_rate': 0.001})
         utils.train_multi(data_iter, val_data_iter, i, net, EntropyLoss,
                     trainer, ctx, num_epochs=args.epochs, print_batches=args.print_batches)

@@ -81,11 +81,13 @@ def get_word_embedding():
         word = values[0]
         coefs = np.asarray(values[1:], dtype='float32')
         embeddings_index[word] = coefs
+    print (len(embeddings_index))
     return embeddings_index
 
 def get_embed_matrix(embeddings_index, word_index):
     nb_words = min(config.MAX_WORDS, len(word_index))
-    embedding_matrix = np.zeros((nb_words, config.EMBEDDING_DIM))
+    # embedding_matrix = np.zeros((nb_words, config.EMBEDDING_DIM))
+    embedding_matrix = np.random.rand(nb_words, config.EMBEDDING_DIM)
     for word, i in word_index.items():
         if i >= config.MAX_WORDS:
             continue

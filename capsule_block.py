@@ -94,9 +94,7 @@ class CapFullyNGBlock(nn.Block):
         x_expand = nd.expand_dims(nd.expand_dims(x, axis=2),2)
         w_expand = nd.repeat(nd.expand_dims(self.w_ij.data(x.context),axis=0), repeats=x.shape[0], axis=0)
         u_ = w_expand*x_expand
-        # u_ = nd.abs(w_expand - x_expand)
         u = nd.sum(u_, axis = 1)
-        # u_no_gradient = nd.stop_gradient(u)
         for i in range(self.route_num):
             c_mat = nd.softmax(b_mat, axis=2)
             s = nd.sum(u * c_mat, axis=-1)
