@@ -31,8 +31,8 @@ def text_to_wordlist(text, remove_stopwords=False, stem_words=False):
     # regex to replace all numerics
     replace_numbers = re.compile(r'\d+', re.IGNORECASE)
 
-    text = text.lower().split()
-    # text = text.split()
+    # text = text.lower().split()
+    text = text.split()
     # Optionally, remove stop words
     if remove_stopwords:
         stops = set(stopwords.words("english"))
@@ -73,8 +73,9 @@ def process_data(train_data, test_data):
 
 def get_word_embedding():
     data_path = 'data'
-    # EMBEDDING_FILE = os.path.join(data_path, 'glove.840B.300d.txt')
-    EMBEDDING_FILE = os.path.join(data_path, 'crawl-300d-2M.vec')
+    # raw_embed = 'crawl-300d-2M.vec'
+    raw_embed = 'glove.840B.300d.txt'
+    EMBEDDING_FILE = os.path.join(data_path, raw_embed)
     embeddings_index = {}
     for line in open(EMBEDDING_FILE, "rb"):
         values = line.split()

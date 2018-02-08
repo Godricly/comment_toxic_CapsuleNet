@@ -2,19 +2,20 @@ import pandas as pd
 import numpy as np
 from preprocess import get_label
 
-kfold=10
+kfold=30
 for i in range(kfold):
-    result_path = 'result'+str(i)+'.csv'
+    result_path = 'data/result'+str(i)+'.csv'
+    # result_path = 'result'+str(i)+'.csv'
     result = pd.read_csv(result_path)
     pred_label = get_label(result)
     if i==0:
         mean_result = pred_label
     else:
-        mean_result *= pred_label
-        # mean_result += pred_label
+        # mean_result *= pred_label
+        mean_result += pred_label
 
-mean_result = np.power(mean_result, 1.0/kfold)
-# mean_result = mean_result / kfold
+# mean_result = np.power(mean_result, 1.0/kfold)
+mean_result = mean_result / kfold
 
 labels = ['toxic', 'severe_toxic',
           'obscene', 'threat',

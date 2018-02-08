@@ -10,7 +10,7 @@ from mxnet.io import NDArrayIter
 from mxnet.ndarray import array
 from mxnet import nd
 from net import net_define, net_define_eu
-from sklearn.model_selection import KFold
+from sklearn.model_selection import KFold, StratifiedKFold
 import utils
 import config
 
@@ -26,7 +26,7 @@ def EntropyLoss(y_pred, y_true):
 def EntropyLoss1(y_pred, y_true):
     train_pos_ratio = array([ 0.09584448, 0.00999555, 0.05294822, 0.00299553, 0.04936361, 0.00880486], ctx=y_pred.context, dtype=np.float32)*10
     train_neg_ratio = (1.0-train_pos_ratio)*10
-    L = - y_true*nd.log2(y_pred) * train_neg_ratio - (1-y_true) * nd.log2(1-y_pred) * train_pos_ratio
+    L = - y_true*nd.log2(y_pred) * train_neg_ratio - (1-y_true) * nd.log2(1-y_pred)
     return nd.mean(L)
 
 if __name__ == "__main__":
@@ -40,13 +40,20 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     train_data, train_label, word_index = fetch_data(False)
-    print train_data.shape
     embedding_dict = get_word_embedding()
     em = get_embed_matrix(embedding_dict, word_index)
     em = array(em, ctx=mx.cpu())
-    kf = KFold(n_splits=args.kfold, shuffle=True)
-    for i, (inTr, inTe) in enumerate(kf.split(train_data)):
+    kf_label = np.ones(train_label.shape)
+    for i in range(train_label.shape[1]):
+        kf_label[:,i] = 2**i
+    kf_label = np.sum(kf_label, axis=1)
+
+    kf = StratifiedKFold(n_splits=args.kfold, shuffle=True)
+    for i, (inTr, inTe) in enumerate(kf.split(train_data, kf_label)):
         print('fold: ', i)
+        ctx = [mx.gpu(0), mx.gpu(1)]# , mx.gpu(4), mx.gpu(5)]
+        net = net_define_eu()
+
         xtr = train_data[inTr]
         xte = train_data[inTe]
         ytr = train_label[inTr]
@@ -54,14 +61,11 @@ if __name__ == "__main__":
         data_iter =     NDArrayIter(data= xtr, label=ytr, batch_size=args.batch_size, shuffle=True)
         val_data_iter = NDArrayIter(data= xte, label=yte, batch_size=args.batch_size, shuffle=False)
 
-        ctx = [mx.gpu(0), mx.gpu(1)]
-        # ctx = mx.gpu(args.gpu)
-        net = net_define_eu()
         # print net.collect_params()
         net.collect_params().reset_ctx(ctx)
         net.collect_params()['sequential'+str(i)+ '_embedding0_weight'].set_data(em)
         net.collect_params()['sequential'+str(i)+ '_embedding0_weight'].grad_req = 'null'
         trainer = Trainer(net.collect_params(),'adam', {'learning_rate': 0.001})
+        # trainer = Trainer(net.collect_params(),'RMSProp', {'learning_rate': 0.001})
         utils.train_multi(data_iter, val_data_iter, i, net, EntropyLoss,
                     trainer, ctx, num_epochs=args.epochs, print_batches=args.print_batches)
-        # net.save_params('net'+str(i)+'.params')

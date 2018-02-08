@@ -39,23 +39,22 @@ if __name__ == "__main__":
     net = net_define_eu()
 
     train_data, train_label, word_index = fetch_data()
-    print train_data.shape
     embedding_dict = get_word_embedding()
+    print len(word_index)
     em = get_embed_matrix(embedding_dict, word_index)
     net.collect_params().reset_ctx(ctx)
     em = array(em, ctx=mx.cpu())
     net.collect_params()['sequential0_embedding0_weight'].set_data(em)
-    net.collect_params()['sequential0_embedding0_weight'].setattr('grad_req', 'null')
+    net.collect_params()['sequential0_embedding0_weight'].grad_req = 'null'
 
     print_batches = 100
     shuffle_idx = np.random.permutation(train_data.shape[0])
     train_data = train_data[shuffle_idx]
     train_label = train_label[shuffle_idx]
 
-    data_iter = NDArrayIter(data= train_data[:-10000], label=train_label[:-10000], batch_size=args.batch_size, shuffle=True)
-    val_data_iter = NDArrayIter(data= train_data[-10000:], label=train_label[-10000:], batch_size=args.batch_size, shuffle=False)
-    # trainer = Trainer(net.collect_params(),'adam', {'learning_rate': 0.001})
-    trainer = Trainer(net.collect_params(),'RMSProp', {'learning_rate': 0.001})
+    data_iter = NDArrayIter(data= train_data[:-5000], label=train_label[:-5000], batch_size=args.batch_size, shuffle=True)
+    val_data_iter = NDArrayIter(data= train_data[-5000:], label=train_label[-5000:], batch_size=args.batch_size, shuffle=False)
+    trainer = Trainer(net.collect_params(),'adam', {'learning_rate': 0.001})
+    # trainer = Trainer(net.collect_params(),'RMSProp', {'learning_rate': 0.001})
     utils.train(data_iter, val_data_iter, net, EntropyLoss,
                 trainer, ctx, num_epochs=args.epochs, print_batches=print_batches)
-    net.save_params('net.params')

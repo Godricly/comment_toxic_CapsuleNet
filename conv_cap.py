@@ -20,10 +20,11 @@ class PrimeConvCap(nn.Block):
         self.num_cap = num_cap
         self.cap = nn.Conv2D(channels=(num_cap*num_filter), kernel_size=kernel_size,
                              padding=padding, strides=strides)
+        # self.bn = nn.BatchNorm()
 
     def forward(self, x):
-        # print x.shape
         conv_out = nd.expand_dims(self.cap(x), axis=2)
+        # conv_out = nd.expand_dims(self.bn(self.cap(x)), axis=2)
         conv_out = conv_out.reshape((0,self.num_cap,-1,0,0))
         conv_out = squash(conv_out, 2)
         # print conv_out.shape
