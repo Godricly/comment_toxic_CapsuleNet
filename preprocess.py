@@ -59,9 +59,9 @@ def text_to_wordlist(text, remove_stopwords=False, stem_words=False):
 
     text = " ".join(text)
     # Remove Special Characters
-    text = special_character_removal.sub('', text)
+    # text = special_character_removal.sub('', text)
     # Replace Numbers
-    text = replace_numbers.sub('n', text)
+    text = replace_numbers.sub('NUMBER_REPLACER', text)
     # Optionally, shorten words to their stems
     if stem_words:
         text = text.split()
@@ -82,7 +82,8 @@ def get_id(raw_data):
     return raw_data['id'].values
 
 def process_data(train_data, test_data):
-    tokenizer = text.Tokenizer(num_words=config.MAX_WORDS, filters='"#$%&()*+,-./:;<=>@[\\]^_`\'{|}~\t\n', lower=False)
+    # tokenizer = text.Tokenizer(num_words=config.MAX_WORDS, filters='"#$%&()*+,-./:;<=>@[\\]^_`\'{|}~\t\n', lower=False)
+    tokenizer = text.Tokenizer(num_words=config.MAX_WORDS, filters='-=&\t\n()/\\.#:<>"', lower=False)
     tokenizer.fit_on_texts(train_data+test_data)
     train_tokenized = tokenizer.texts_to_sequences(train_data)
     test_tokenized = tokenizer.texts_to_sequences(test_data)
@@ -173,6 +174,10 @@ def fetch_test_data(aug=False):
 if __name__ == '__main__':
     # embedding_dict = get_word_embedding()
     data, label, word_index = fetch_data()
-    print(np.sum(label, axis=0).astype(float) / label.shape[0])
+    # print(np.sum(label, axis=0).astype(float) / label.shape[0])
     # em = get_embed_matrix(embedding_dict, word_index)
     # print(em.shape)
+    reverse_idx = {v:k for k,v in word_index.items()}
+    reverse_idx[0] = 'NOTHING'
+    for i in range(100):
+        print [reverse_idx[v] for v in data[i] if v!=0]
