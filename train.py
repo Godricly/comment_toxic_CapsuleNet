@@ -40,7 +40,7 @@ if __name__ == "__main__":
 
     train_data, train_label, word_index = fetch_data()
     embedding_dict = get_word_embedding()
-    print len(word_index)
+    # print len(word_index)
     em = get_embed_matrix(embedding_dict, word_index)
     net.collect_params().reset_ctx(ctx)
     em = array(em, ctx=mx.cpu())

@@ -25,9 +25,28 @@ def get_data(raw_data):
 def text_to_wordlist(text, remove_stopwords=False, stem_words=False):
     # Clean the text, with the option to remove stopwords and to stem words.
     # Convert words to lower case and split them
+    wiki_reg=r'https?://en.wikipedia.org/[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]'
+    url_reg=r'https?://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]'
+    ip_reg='\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}'
+    WIKI_LINK=' WIKI_LINK '
+    URL_LINK=' URL_LINK '
+    IP_LINK=' IP_LINK '
+    #clear link
+    c = re.findall(wiki_reg, text)
+    for u in c:
+        text = text.replace(u, WIKI_LINK)
+    c = re.findall(url_reg, text)
+    for u in c:
+        text = text.replace(u, WIKI_LINK)
+    c = re.findall(wiki_reg, text)
+    for u in c:
+        text = text.replace(u, URL_LINK)
+    c = re.findall(ip_reg, text)
+    for u in c:
+        text = text.replace(u, IP_LINK)
 
     # Regex to remove all Non-Alpha Numeric and space
-    special_character_removal = re.compile(r'[^a-z\d ]', re.IGNORECASE)
+    special_character_removal = re.compile(r'[^A-Za-z\d!? ]', re.IGNORECASE)
     # regex to replace all numerics
     replace_numbers = re.compile(r'\d+', re.IGNORECASE)
 
@@ -63,7 +82,7 @@ def get_id(raw_data):
     return raw_data['id'].values
 
 def process_data(train_data, test_data):
-    tokenizer = text.Tokenizer(num_words=config.MAX_WORDS)
+    tokenizer = text.Tokenizer(num_words=config.MAX_WORDS, filters='"#$%&()*+,-./:;<=>@[\\]^_`\'{|}~\t\n', lower=False)
     tokenizer.fit_on_texts(train_data+test_data)
     train_tokenized = tokenizer.texts_to_sequences(train_data)
     test_tokenized = tokenizer.texts_to_sequences(test_data)
@@ -154,6 +173,6 @@ def fetch_test_data(aug=False):
 if __name__ == '__main__':
     # embedding_dict = get_word_embedding()
     data, label, word_index = fetch_data()
-    print np.sum(label, axis=0).astype(float) / label.shape[0]
+    print(np.sum(label, axis=0).astype(float) / label.shape[0])
     # em = get_embed_matrix(embedding_dict, word_index)
     # print(em.shape)

@@ -2,9 +2,10 @@ from mxnet import gluon
 from mxnet import autograd
 from mxnet import nd
 from mxnet import image
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, confusion_matrix
 import mxnet as mx
 import numpy as np
+import time
 
 def try_gpu():
     """If GPU is available, return mx.gpu(0); else return mx.cpu()"""
@@ -44,6 +45,7 @@ def evaluate_accuracy_multi(data_iterator, net, ctx):
     acc = 0
     dummy_label = np.zeros((0,6))
     dummy_pred = np.zeros((0,6))
+    t1 = time.time()
     for i, batch in enumerate(data_iterator):
         data, label = _get_batch_multi(batch, ctx)
         # acc += np.mean([accuracy(net(X), Y) for X, Y in zip(data, label)])
@@ -54,7 +56,11 @@ def evaluate_accuracy_multi(data_iterator, net, ctx):
         dummy_pred = np.vstack((dummy_pred, output))
     # return acc / (i+1)
     # print dummy_label.shape, dummy_pred.shape
-    return roc_auc_score(dummy_label, dummy_pred), accuracy(dummy_pred, dummy_label)
+    dummy_pred_label = dummy_pred > 0.5
+    for i in range(dummy_label.shape[1]):
+        print i, confusion_matrix(dummy_label[:,i], dummy_pred_label[:,i])
+
+    return roc_auc_score(dummy_label, dummy_pred), accuracy(dummy_pred, dummy_label), time.time() - t1
 
 
 def train(train_data, test_data, net, loss, trainer,
@@ -93,7 +99,7 @@ def train(train_data, test_data, net, loss, trainer,
             net.save_params('net.params')
 
 def train_multi(train_data, test_data, iteration, net, loss, trainer,
-          ctx, num_epochs, print_batches=None):
+          ctx, num_epochs, print_batches=None, pos_tr_ratio=None):
     """Train a network"""
     min_loss = 0
     for epoch in range(num_epochs):
@@ -103,7 +109,7 @@ def train_multi(train_data, test_data, iteration, net, loss, trainer,
         for i, batch in enumerate(train_data):
             data, label = _get_batch_multi(batch, ctx)
             with autograd.record():
-                losses = [loss(net(X), Y) for X, Y in zip(data, label)]
+                losses = [loss(net(X), Y, pos_tr_ratio) for X, Y in zip(data, label)]
                 for l in losses:
                     l.backward()
             trainer.step(batch.data[0].shape[0], ignore_stale_grad=True)
@@ -111,17 +117,17 @@ def train_multi(train_data, test_data, iteration, net, loss, trainer,
             # train_acc += accuracy(output, label)
             n = i + 1
             if print_batches and n % print_batches == 0:
-                test_acc, test_loss = evaluate_accuracy_multi(test_data, net, ctx)
-                print("Batch %d. Loss: %f, Test roc_auc: %f, test_loss: %f" % (
-                n, train_loss/n, test_acc, test_loss))
+                test_acc, test_loss, eval_time = evaluate_accuracy_multi(test_data, net, ctx)
+                print("Batch %d. Loss: %f, Test roc_auc: %f, test_loss: %f , eval time: %f" % (
+                n, train_loss/n, test_acc, test_loss, eval_time))
                 if test_acc > min_loss:
                     min_loss = test_acc
                     net.save_params('net'+str(iteration)+'.params')
           
         train_data.reset()
-        test_acc, test_loss = evaluate_accuracy_multi(test_data, net, ctx)
-        print("Epoch %d. Loss: %f, roc_auc: %f, test_loss: %f" % (
-              epoch, train_loss/n, test_acc, test_loss))
+        test_acc, test_loss, eval_time = evaluate_accuracy_multi(test_data, net, ctx)
+        print("Epoch %d. Loss: %f, roc_auc: %f, test_loss: %f , eval time: %f" % (
+              epoch, train_loss/n, test_acc, test_loss, eval_time))
         if test_acc > min_loss:
             min_loss = test_acc
             net.save_params('net'+str(iteration)+'.params')

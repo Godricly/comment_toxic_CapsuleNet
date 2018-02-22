@@ -1,6 +1,6 @@
 import shutil
 kfold=10
-rename = 2
+rename = 0
 for i in range(kfold):
     # result_path = 'data/result'+str(i)+'.csv'
     result_path = 'result'+str(i)+'.csv'

@@ -46,11 +46,11 @@ class AdvConvCap(nn.Block):
         # with each group output size as num_cap * num_filter
         self.cap = nn.Conv2D(channels=(num_cap * num_filter * num_cap_in), kernel_size=kernel_size, strides=strides,
                              padding=padding, groups= num_cap_in)
+        # self.bn = nn.BatchNorm()
 
     def forward(self, x):
         x_reshape = x.reshape((x.shape[0], -1, x.shape[3], x.shape[4]))
         cap_out = self.cap(x_reshape)
-        # cap_out = self.cap(x)
         cap_out = cap_out.reshape((cap_out.shape[0], self.num_cap_in, self.num_cap,
                                    self.num_filter, cap_out.shape[2], cap_out.shape[3]))
         return self.route(cap_out)
@@ -61,36 +61,16 @@ class AdvConvCap(nn.Block):
         return cap_out
         '''
 
-    def route(self, x):
-        '''
-        b_mat = nd.zeros((x.shape[0], self.num_cap_in, self.num_cap, 1, x.shape[4], x.shape[5]), ctx=x.context)
-        c_mat = nd.softmax(b_mat, axis=2)
-        # s = nd.sum(x/self.num_cap, axis=1)
-        s = nd.sum(x*c_mat, axis=1)
-        # print x.reshape((x.shape[0],self.num_cap,-1,x.shape[4], x.shape[5]))[0,0,0,0,0]
-        # print s[0,0,0,0,0]
-        # print s1[0,0,0,0,0]
-        # u_no_gradient = nd.stop_gradient(x)
-        # s = nd.sum(u_no_gradient* c_mat, axis=1)
-        v = squash(s, 2)
-        '''
-        b_mat = nd.zeros((x.shape[0], self.num_cap_in, self.num_cap, 1, x.shape[4], x.shape[5]), ctx=x.context)
-        u = x
-        u_no_gradient = nd.stop_gradient(x)
+    def route(self, u):
+        b_mat = nd.zeros((u.shape[0], self.num_cap_in, self.num_cap, 1, u.shape[4], u.shape[5]), ctx=u.context)
         for i in range(self.route_num):
-            # print i, nd.max(u).asnumpy()[0], nd.min(u).asnumpy()[0]
             c_mat = nd.softmax(b_mat, axis=2)
-            if i == self.route_num -1:
-                s = nd.sum(u * c_mat, axis=1)
-            else:
-                s = nd.sum(u_no_gradient * c_mat, axis=1)
+            s = nd.sum(u * c_mat, axis=1)
             v = squash(s, 2)
-            v1 = nd.expand_dims(v, axis=1)
             if i != self.route_num - 1:
-                update_term = nd.sum(u_no_gradient*v1, axis=3, keepdims=True)
+                v1 = nd.expand_dims(v, axis=1)
+                update_term = nd.sum(u*v1, axis=3, keepdims=True)
                 b_mat = b_mat + update_term
-        # print v.shape
-        # v = nd.transpose(v, (0,2,1,3,4))
         return v
 '''
 class AdvFullyCap(nn.Block):

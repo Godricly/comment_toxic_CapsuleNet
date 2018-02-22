@@ -2,10 +2,10 @@ import pandas as pd
 import numpy as np
 from preprocess import get_label
 
-kfold=30
+kfold=5
 for i in range(kfold):
-    result_path = 'data/result'+str(i)+'.csv'
-    # result_path = 'result'+str(i)+'.csv'
+    # result_path = 'data/result'+str(i)+'.csv'
+    result_path = 'result'+str(i)+'.csv'
     result = pd.read_csv(result_path)
     pred_label = get_label(result)
     if i==0:
