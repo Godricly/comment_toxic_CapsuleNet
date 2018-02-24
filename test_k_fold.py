@@ -23,14 +23,15 @@ if __name__ == "__main__":
 
     # ctx = mx.cpu()# gpu(7)
 
+    test_data, test_id = fetch_test_data()
+    data_iter = NDArrayIter(data= test_data, batch_size=args.batch_size, shuffle=False)
     for i in range(args.kfold):
         print(i)
         ctx = mx.gpu(args.gpu)
         net = net_define_eu()
         net.collect_params().reset_ctx(ctx)
         net.load_params('net'+str(i)+'.params', ctx)
-        test_data, test_id = fetch_test_data()
-        data_iter = NDArrayIter(data= test_data, batch_size=args.batch_size, shuffle=False)
+        data_iter.reset()
         with open('result'+str(i)+'.csv','w') as f:
             f.write('id,toxic,severe_toxic,obscene,threat,insult,identity_hate\n')
             for i, d in enumerate(data_iter):

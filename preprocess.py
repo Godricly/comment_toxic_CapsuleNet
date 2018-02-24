@@ -2,8 +2,10 @@ import os
 import re
 import numpy as np
 import pandas as pd
-from keras.preprocessing import text, sequence
 import config
+from tqdm import tqdm
+from multiprocessing import Pool
+from keras.preprocessing import text, sequence
 from rake_nltk import Rake
 from bad_dict import get_bad_word_dict
 
@@ -15,7 +17,13 @@ def get_raw_data(path):
 
 def get_data(raw_data):
     raw_value = raw_data['comment_text'].fillna("_na_").values
-    processed_data = [text_parse(v) for v in raw_value]
+    pool = Pool()
+    processed_data = list(tqdm(pool.imap(text_parse, raw_value),total=raw_value.shape[0]))
+    '''
+    with open('debug.txt', 'w') as f:
+       for l in processed_data:
+           f.write(l+'\n')
+    '''
     return processed_data 
 
 def text_parse(text, remove_stopwords=False, stem_words=False):
@@ -43,10 +51,9 @@ def text_parse(text, remove_stopwords=False, stem_words=False):
     # Regex to remove all Non-Alpha Numeric and space
     special_character_removal = re.compile(r'[^A-Za-z\d!?*\'_ ]', re.IGNORECASE)
     # regex to replace all numerics
-    replace_numbers = re.compile(r'\d+', re.IGNORECASE)
+    replace_numbers = re.compile(r'\b\d+\b', re.IGNORECASE)
     text = text.lower().split()
     # Optionally, remove stop words
-
     if remove_stopwords:
         stops = set(stopwords.words("english"))
         text = [w for w in text if not w in stops]
@@ -54,7 +61,8 @@ def text_parse(text, remove_stopwords=False, stem_words=False):
     # Remove Special Characters
     text = special_character_removal.sub(' ', text)
     for k,v in bad_word_dict.items():
-        bad_reg = re.compile('[!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n ]'+ re.escape(k) +'[!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n ]')
+        # bad_reg = re.compile('[!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n ]?'+ re.escape(k) +'[!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n ]?')
+        bad_reg = re.compile('[\W]?'+ re.escape(k) +'[\W]|[\W]' + re.escape(k) + '[\W]?')
         text = bad_reg.sub(' '+ v +' ', text)
     # Replace Numbers
     text = replace_numbers.sub('NUMBER_REPLACER', text)
@@ -92,8 +100,6 @@ def text_to_wordlist(text, remove_stopwords=False, stem_words=False):
     for u in c:
         text = text.replace(u, URL_LINK)
     c = re.findall(ip_reg, text)
-    for u in c:
-        text = text.replace(u, IP_LINK)
 
     # Regex to remove all Non-Alpha Numeric and space
     special_character_removal = re.compile(r'[^A-Za-z\d!?*\' ]', re.IGNORECASE)
@@ -176,7 +182,6 @@ def fetch_data(aug=False):
     test = 'test.csv'
     train_raw = get_raw_data(os.path.join(data_path, train))
     test_raw = get_raw_data(os.path.join(data_path, test))
-    test_data = get_data(test_raw)
 
     if aug:
         train_de = 'train_de.csv'
@@ -187,6 +192,7 @@ def fetch_data(aug=False):
         train_fr_raw = get_raw_data(os.path.join(data_path, train_fr))
         train_raw = pd.concat([train_raw, train_de_raw, train_es_raw, train_fr_raw]).drop_duplicates('comment_text')
     train_data = list(train_raw['comment_text'].fillna("_na_").values)
+    test_data = list(test_raw['comment_text'].fillna("_na_").values)
     train_label = get_label(train_raw)
         # print train_raw
         # train_de_data = get_data(train_de_raw)
@@ -207,8 +213,6 @@ def fetch_test_data(aug=False):
     test = 'test.csv'
     train_raw = get_raw_data(os.path.join(data_path, train))
     test_raw = get_raw_data(os.path.join(data_path, test))
-    train_data = get_data(train_raw)
-    test_data = get_data(test_raw)
     if aug:
         train_de = 'train_de.csv'
         train_fr = 'train_fr.csv'
@@ -218,6 +222,7 @@ def fetch_test_data(aug=False):
         train_fr_raw = get_raw_data(os.path.join(data_path, train_fr))
         train_raw = pd.concat([train_raw, train_de_raw, train_es_raw, train_fr_raw]).drop_duplicates('comment_text')
     train_data = list(train_raw['comment_text'].fillna("_na_").values)
+    test_data = list(test_raw['comment_text'].fillna("_na_").values)
     train_data, test_data, word_index = process_data(train_data, test_data)
     test_id = get_id(test_raw)
     return test_data, test_id
@@ -233,12 +238,14 @@ if __name__ == '__main__':
     # for i in range(100):
     #     print [reverse_idx[v] for v in data[i] if v!=0]
 
-    data_path = 'data'
-    train = 'train.csv'
-    test = 'test.csv'
-    train_raw = pd.read_csv(os.path.join(data_path, train))
-    raw_value = train_raw['comment_text'].fillna("_na_").values
-    processed_data = []
-    for i, v in enumerate(raw_value):
-        text_parse(v)
+    # data_path = 'data'
+    # train = 'train.csv'
+    # test = 'test.csv'
+    # train_raw = pd.read_csv(os.path.join(data_path, train))
+    # raw_value = train_raw['comment_text'].fillna("_na_").values
+    # processed_data = []
+    # for i, v in enumerate(raw_value):
+    #     text_parse(v)
+    a = 'tittle f**king damn c0cksucker'.lower()
+    print text_parse(a)
 
