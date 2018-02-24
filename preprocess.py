@@ -4,6 +4,8 @@ import numpy as np
 import pandas as pd
 from keras.preprocessing import text, sequence
 import config
+from rake_nltk import Rake
+from bad_dict import get_bad_word_dict
 
 def get_raw_data(path):
     data = pd.read_csv(path)
@@ -12,15 +14,63 @@ def get_raw_data(path):
     return data
 
 def get_data(raw_data):
-     raw_value = raw_data['comment_text'].fillna("_na_").values
-     processed_data = []
-     for v in raw_value:
-         processed_data.append(text_to_wordlist(v))
-     return processed_data 
-     '''
-     return list(raw_value)
-     '''
+    raw_value = raw_data['comment_text'].fillna("_na_").values
+    processed_data = [text_parse(v) for v in raw_value]
+    return processed_data 
 
+def text_parse(text, remove_stopwords=False, stem_words=False):
+    wiki_reg=r'https?://en.wikipedia.org/[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]'
+    url_reg=r'https?://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]'
+    ip_reg='\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}'
+    WIKI_LINK=' WIKILINKREPLACER '
+    URL_LINK=' URLLINKREPLACER '
+    IP_LINK=' IPLINKREPLACER '
+    #clear link
+    c = re.findall(wiki_reg, text)
+    for u in c:
+        text = text.replace(u, WIKI_LINK)
+    c = re.findall(url_reg, text)
+    for u in c:
+        text = text.replace(u, WIKI_LINK)
+    c = re.findall(wiki_reg, text)
+    for u in c:
+        text = text.replace(u, URL_LINK)
+    c = re.findall(ip_reg, text)
+    for u in c:
+        text = text.replace(u, IP_LINK)
+
+    bad_word_dict = get_bad_word_dict()
+    # Regex to remove all Non-Alpha Numeric and space
+    special_character_removal = re.compile(r'[^A-Za-z\d!?*\'_ ]', re.IGNORECASE)
+    # regex to replace all numerics
+    replace_numbers = re.compile(r'\d+', re.IGNORECASE)
+    text = text.lower().split()
+    # Optionally, remove stop words
+
+    if remove_stopwords:
+        stops = set(stopwords.words("english"))
+        text = [w for w in text if not w in stops]
+    text = " ".join(text)
+    # Remove Special Characters
+    text = special_character_removal.sub(' ', text)
+    for k,v in bad_word_dict.items():
+        bad_reg = re.compile('[!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n ]'+ re.escape(k) +'[!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n ]')
+        text = bad_reg.sub(' '+ v +' ', text)
+    # Replace Numbers
+    text = replace_numbers.sub('NUMBER_REPLACER', text)
+    text =text.split()
+    text = " ".join(text)
+
+    if stem_words:
+        text = text.split()
+        stemmer = SnowballStemmer('english')
+        stemmed_words = [stemmer.stem(word) for word in text]
+        text = " ".join(stemmed_words)
+    #  r = Rake()
+    # r.extract_keywords_from_text(text)
+    # print r.get_ranked_phrases()
+
+    return text
 
 def text_to_wordlist(text, remove_stopwords=False, stem_words=False):
     # Clean the text, with the option to remove stopwords and to stem words.
@@ -46,7 +96,7 @@ def text_to_wordlist(text, remove_stopwords=False, stem_words=False):
         text = text.replace(u, IP_LINK)
 
     # Regex to remove all Non-Alpha Numeric and space
-    special_character_removal = re.compile(r'[^A-Za-z\d!? ]', re.IGNORECASE)
+    special_character_removal = re.compile(r'[^A-Za-z\d!?*\' ]', re.IGNORECASE)
     # regex to replace all numerics
     replace_numbers = re.compile(r'\d+', re.IGNORECASE)
 
@@ -59,9 +109,9 @@ def text_to_wordlist(text, remove_stopwords=False, stem_words=False):
 
     text = " ".join(text)
     # Remove Special Characters
-    # text = special_character_removal.sub('', text)
+    text = special_character_removal.sub('', text)
     # Replace Numbers
-    text = replace_numbers.sub('NUMBER_REPLACER', text)
+    text = replace_numbers.sub('NUMBERREPLACER', text)
     # Optionally, shorten words to their stems
     if stem_words:
         text = text.split()
@@ -83,7 +133,8 @@ def get_id(raw_data):
 
 def process_data(train_data, test_data):
     # tokenizer = text.Tokenizer(num_words=config.MAX_WORDS, filters='"#$%&()*+,-./:;<=>@[\\]^_`\'{|}~\t\n', lower=False)
-    tokenizer = text.Tokenizer(num_words=config.MAX_WORDS, filters='-=&\t\n()/\\.#:<>"', lower=False)
+    # tokenizer = text.Tokenizer(num_words=config.MAX_WORDS, filters='-=&\t\n()/\\.#:<>"', lower=False)
+    tokenizer = text.Tokenizer(num_words=config.MAX_WORDS)
     tokenizer.fit_on_texts(train_data+test_data)
     train_tokenized = tokenizer.texts_to_sequences(train_data)
     test_tokenized = tokenizer.texts_to_sequences(test_data)
@@ -173,11 +224,21 @@ def fetch_test_data(aug=False):
 
 if __name__ == '__main__':
     # embedding_dict = get_word_embedding()
-    data, label, word_index = fetch_data()
+    # data, label, word_index = fetch_data()
     # print(np.sum(label, axis=0).astype(float) / label.shape[0])
     # em = get_embed_matrix(embedding_dict, word_index)
     # print(em.shape)
-    reverse_idx = {v:k for k,v in word_index.items()}
-    reverse_idx[0] = 'NOTHING'
-    for i in range(100):
-        print [reverse_idx[v] for v in data[i] if v!=0]
+    # reverse_idx = {v:k for k,v in word_index.items()}
+    # reverse_idx[0] = 'NOTHING'
+    # for i in range(100):
+    #     print [reverse_idx[v] for v in data[i] if v!=0]
+
+    data_path = 'data'
+    train = 'train.csv'
+    test = 'test.csv'
+    train_raw = pd.read_csv(os.path.join(data_path, train))
+    raw_value = train_raw['comment_text'].fillna("_na_").values
+    processed_data = []
+    for i, v in enumerate(raw_value):
+        text_parse(v)
+
