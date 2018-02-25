@@ -29,18 +29,23 @@ def get_data(raw_data):
 def text_parse(text, remove_stopwords=False, stem_words=False):
     wiki_reg=r'https?://en.wikipedia.org/[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]'
     url_reg=r'https?://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]'
+    url_reg2=r'www.[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]'
     ip_reg='\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}'
     WIKI_LINK=' WIKILINKREPLACER '
     URL_LINK=' URLLINKREPLACER '
     IP_LINK=' IPLINKREPLACER '
     #clear link
+    # replace endline with '. '
+    endline = re.compile(r'.?\n', re.IGNORECASE)
+    text = endline.sub('. ', text)
+
     c = re.findall(wiki_reg, text)
     for u in c:
         text = text.replace(u, WIKI_LINK)
     c = re.findall(url_reg, text)
     for u in c:
-        text = text.replace(u, WIKI_LINK)
-    c = re.findall(wiki_reg, text)
+        text = text.replace(u, URL_LINK)
+    c = re.findall(url_reg2, text)
     for u in c:
         text = text.replace(u, URL_LINK)
     c = re.findall(ip_reg, text)
@@ -61,9 +66,11 @@ def text_parse(text, remove_stopwords=False, stem_words=False):
     # Remove Special Characters
     text = special_character_removal.sub(' ', text)
     for k,v in bad_word_dict.items():
-        # bad_reg = re.compile('[!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n ]?'+ re.escape(k) +'[!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n ]?')
-        bad_reg = re.compile('[\W]?'+ re.escape(k) +'[\W]|[\W]' + re.escape(k) + '[\W]?')
-        text = bad_reg.sub(' '+ v +' ', text)
+        bad_reg = re.compile('[\W]'+ re.escape(k) +'[\W]?')
+        text = bad_reg.sub(' '+ v, text)
+        bad_reg = re.compile('[\W]?'+ re.escape(k) +'[\W]')
+        text = bad_reg.sub(v + ' ', text)
+
     # Replace Numbers
     text = replace_numbers.sub('NUMBER_REPLACER', text)
     text =text.split()
@@ -238,14 +245,19 @@ if __name__ == '__main__':
     # for i in range(100):
     #     print [reverse_idx[v] for v in data[i] if v!=0]
 
-    # data_path = 'data'
-    # train = 'train.csv'
-    # test = 'test.csv'
-    # train_raw = pd.read_csv(os.path.join(data_path, train))
-    # raw_value = train_raw['comment_text'].fillna("_na_").values
+    data_path = 'data'
+    train = 'train.csv'
+    test = 'test.csv'
+    train_raw = pd.read_csv(os.path.join(data_path, train))
+    raw_value = train_raw['comment_text'].fillna("_na_").values
     # processed_data = []
     # for i, v in enumerate(raw_value):
     #     text_parse(v)
-    a = 'tittle f**king damn c0cksucker'.lower()
+    a = 'Fuction anow' #raw_value[8306]
+    print a
     print text_parse(a)
-
+    '''
+    r = Rake()
+    r.extract_keywords_from_text(text_parse(a))
+    print r.get_ranked_phrases()
+    '''
