@@ -6,8 +6,8 @@ import config
 from tqdm import tqdm
 from multiprocessing import Pool
 from keras.preprocessing import text, sequence
-from rake_nltk import Rake
 from bad_dict import get_bad_word_dict
+from rake_parse import rake_parse
 
 def get_raw_data(path):
     data = pd.read_csv(path)
@@ -54,7 +54,7 @@ def text_parse(text, remove_stopwords=False, stem_words=False):
 
     bad_word_dict = get_bad_word_dict()
     # Regex to remove all Non-Alpha Numeric and space
-    special_character_removal = re.compile(r'[^A-Za-z\d!?*\'_ ]', re.IGNORECASE)
+    special_character_removal = re.compile(r'[^A-Za-z\d!?*\'.,; ]', re.IGNORECASE)
     # regex to replace all numerics
     replace_numbers = re.compile(r'\b\d+\b', re.IGNORECASE)
     text = text.lower().split()
@@ -72,7 +72,7 @@ def text_parse(text, remove_stopwords=False, stem_words=False):
         text = bad_reg.sub(v + ' ', text)
 
     # Replace Numbers
-    text = replace_numbers.sub('NUMBER_REPLACER', text)
+    text = replace_numbers.sub('NUMBERREPLACER', text)
     text =text.split()
     text = " ".join(text)
 
@@ -81,10 +81,8 @@ def text_parse(text, remove_stopwords=False, stem_words=False):
         stemmer = SnowballStemmer('english')
         stemmed_words = [stemmer.stem(word) for word in text]
         text = " ".join(stemmed_words)
-    #  r = Rake()
-    # r.extract_keywords_from_text(text)
-    # print r.get_ranked_phrases()
-
+    # rake parsing
+    text = rake_parse(text)
     return text
 
 def text_to_wordlist(text, remove_stopwords=False, stem_words=False):
@@ -253,7 +251,7 @@ if __name__ == '__main__':
     # processed_data = []
     # for i, v in enumerate(raw_value):
     #     text_parse(v)
-    a = 'Fuction anow' #raw_value[8306]
+    a = raw_value[8306]
     print a
     print text_parse(a)
     '''
