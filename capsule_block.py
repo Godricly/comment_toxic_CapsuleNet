@@ -89,7 +89,6 @@ class CapFullyNGBlock(nn.Block):
         return self.Route(x_reshape)
 
     def Route(self, x):
-        # b_mat = nd.repeat(self.b_mat.data(), repeats=x.shape[0], axis=0)#nd.stop_gradient(nd.repeat(self.b_mat.data(), repeats=x.shape[0], axis=0))
         b_mat = nd.zeros((x.shape[0],1,self.num_cap, self.num_locations), ctx=x.context)
         x_expand = nd.expand_dims(nd.expand_dims(x, axis=2),2)
         w_expand = nd.repeat(nd.expand_dims(self.w_ij.data(x.context),axis=0), repeats=x.shape[0], axis=0)
@@ -120,12 +119,12 @@ class CapFullyEuBlock(nn.Block):
     def forward(self, x):
         # reshape x into [batch_size, channel, num_previous_cap]
         # print x.shape
+       
         x_reshape = nd.transpose(x,(0,2,1,3,4)).reshape((0,0,-1))
         return self.Route(x_reshape)
 
     def Route(self, x):
         # print x.context
-        # b_mat = nd.repeat(self.b_mat.data(), repeats=x.shape[0], axis=0)#nd.stop_gradient(nd.repeat(self.b_mat.data(), repeats=x.shape[0], axis=0))
         b_mat = nd.zeros((x.shape[0],1,self.num_cap, self.num_locations), ctx=x.context)
         x_expand = nd.expand_dims(nd.expand_dims(x, axis=2),2)
         w_expand = nd.repeat(nd.expand_dims(self.w_ij.data(x.context),axis=0), repeats=x.shape[0], axis=0)
@@ -159,3 +158,10 @@ class LengthBlock(nn.Block):
         x = nd.sqrt(nd.sum(nd.square(x), 1))
         return x
 
+class ActBlock(nn.Block):
+    def __init__(self, **kwargs):
+        super(ActBlock, self).__init__(**kwargs)
+
+    def forward(self, x):
+        x = nd.sigmoid(nd.sum(nd.square(x), 1))
+        return x

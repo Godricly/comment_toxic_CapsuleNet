@@ -66,10 +66,15 @@ def text_parse(text, remove_stopwords=False, stem_words=False):
     # Remove Special Characters
     text = special_character_removal.sub(' ', text)
     for k,v in bad_word_dict.items():
+        # bad_reg = re.compile('[!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n ]'+ re.escape(k) +'[!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n ]')
+        bad_reg = re.compile('[\W]?'+ re.escape(k) +'[\W]|[\W]' + re.escape(k) + '[\W]?') 
+        text = bad_reg.sub(' '+ v +' ', text)
+        '''
         bad_reg = re.compile('[\W]'+ re.escape(k) +'[\W]?')
         text = bad_reg.sub(' '+ v, text)
         bad_reg = re.compile('[\W]?'+ re.escape(k) +'[\W]')
         text = bad_reg.sub(v + ' ', text)
+        '''
 
     # Replace Numbers
     text = replace_numbers.sub('NUMBERREPLACER', text)
@@ -82,7 +87,7 @@ def text_parse(text, remove_stopwords=False, stem_words=False):
         stemmed_words = [stemmer.stem(word) for word in text]
         text = " ".join(stemmed_words)
     # rake parsing
-    text = rake_parse(text)
+    # text = rake_parse(text)
     return text
 
 def text_to_wordlist(text, remove_stopwords=False, stem_words=False):
