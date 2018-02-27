@@ -87,7 +87,7 @@ def text_parse(text, remove_stopwords=False, stem_words=False):
         stemmed_words = [stemmer.stem(word) for word in text]
         text = " ".join(stemmed_words)
     # rake parsing
-    # text = rake_parse(text)
+    text = rake_parse(text)
     return text
 
 def text_to_wordlist(text, remove_stopwords=False, stem_words=False):
@@ -148,8 +148,8 @@ def get_id(raw_data):
     return raw_data['id'].values
 
 def process_data(train_data, test_data):
-    # tokenizer = text.Tokenizer(num_words=config.MAX_WORDS, filters='"#$%&()*+,-./:;<=>@[\\]^_`\'{|}~\t\n', lower=False)
-    # tokenizer = text.Tokenizer(num_words=config.MAX_WORDS, filters='-=&\t\n()/\\.#:<>"', lower=False)
+    # tokenizer = text.Tokenizer(num_words=config.MAX_WORDS,
+    #     filters='!"#$%&()*+,-./:;<=>?@[\\]^`{|}~\t\n')
     tokenizer = text.Tokenizer(num_words=config.MAX_WORDS)
     tokenizer.fit_on_texts(train_data+test_data)
     train_tokenized = tokenizer.texts_to_sequences(train_data)
@@ -174,16 +174,17 @@ def get_word_embedding():
 
 def get_embed_matrix(embeddings_index, word_index):
     nb_words = min(config.MAX_WORDS, len(word_index))
-    # embedding_matrix = np.zeros((nb_words, config.EMBEDDING_DIM))
-    embedding_matrix = np.random.rand(nb_words, config.EMBEDDING_DIM)
+    embedding_matrix = np.empty((nb_words, config.EMBEDDING_DIM))
+    # embedding_matrix = np.random.rand(nb_words, config.EMBEDDING_DIM)
     for word, i in word_index.items():
         if i >= config.MAX_WORDS:
             continue
-        # embedding_vector = embeddings_index.get(str.encode(word))
-        embedding_vector = embeddings_index.get(word)
-        if embedding_vector is not None:
-            # words not found in embedding index will be all-zeros.
-            embedding_matrix[i] = embedding_vector
+        word_parts = word.split('_')
+        embedding_vectors = [embeddings_index.get(w) for w in word_parts]
+        embedding_vectors = np.array([v if v is not None else np.random.rand(config.EMBEDDING_DIM) for v in embedding_vectors])
+        # embedding_matrix[i] = np.sum(embedding_vectors, axis=0)/np.linalg.norm(np.sum(embedding_vectors, axis=0))
+        embedding_matrix[i] = np.sum(embedding_vectors, axis=0)/embedding_vectors.shape[0]
+
     return embedding_matrix
 
 def fetch_data(aug=False):
@@ -257,8 +258,10 @@ if __name__ == '__main__':
     # for i, v in enumerate(raw_value):
     #     text_parse(v)
     a = raw_value[8306]
-    print a
-    print text_parse(a)
+    word_index = {k:i+1 for i,k in enumerate(text_parse(a))}
+    embedding_dict = get_word_embedding()
+    em = get_embed_matrix(embedding_dict, word_index)
+
     '''
     r = Rake()
     r.extract_keywords_from_text(text_parse(a))
