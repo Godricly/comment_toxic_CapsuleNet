@@ -27,12 +27,15 @@ def _get_batch(batch, ctx):
     # data, label = gluon.utils.split_and_load(batch, ctx)
     return data.as_in_context(ctx), label.as_in_context(ctx)
 
-def _get_batch_multi(batch, ctx):
+def _get_batch_multi(batch, ctx, Train=True):
     # naive random shuffle
-    npdata = batch.data[0].asnumpy()
-    np_roll_data = np.roll(npdata, axis=1, shift=np.random.randint(npdata.shape[1]))
-    nd_data = nd.array(np_roll_data )
-    data = gluon.utils.split_and_load(nd_data, ctx)
+    if Train:
+        npdata = batch.data[0].asnumpy()
+        np_roll_data = np.roll(npdata, axis=1, shift=np.random.randint(npdata.shape[1]))
+        nd_data = nd.array(np_roll_data )
+        data = gluon.utils.split_and_load(nd_data, ctx)
+    else:
+        data = gluon.utils.split_and_load(batch.data[0], ctx)
     label = gluon.utils.split_and_load(batch.label[0], ctx)
     return data, label
 
@@ -51,7 +54,7 @@ def evaluate_accuracy_multi(data_iterator, net, ctx):
     dummy_pred = np.zeros((0,6))
     t1 = time.time()
     for i, batch in enumerate(data_iterator):
-        data, label = _get_batch_multi(batch, ctx)
+        data, label = _get_batch_multi(batch, ctx, False)
         # acc += np.mean([accuracy(net(X), Y) for X, Y in zip(data, label)])
         # acc += np.mean([roc_auc_score(Y.asnumpy(), net(X).asnumpy()) for X, Y in zip(data, label)])
         output = np.vstack((net(X).asnumpy() for X in data))
