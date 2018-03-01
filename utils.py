@@ -28,7 +28,11 @@ def _get_batch(batch, ctx):
     return data.as_in_context(ctx), label.as_in_context(ctx)
 
 def _get_batch_multi(batch, ctx):
-    data = gluon.utils.split_and_load(batch.data[0], ctx)
+    # naive random shuffle
+    npdata = batch.data[0].asnumpy()
+    np_roll_data = np.roll(npdata, axis=1, shift=np.random.randint(npdata.shape[1]))
+    nd_data = nd.array(np_roll_data )
+    data = gluon.utils.split_and_load(nd_data, ctx)
     label = gluon.utils.split_and_load(batch.label[0], ctx)
     return data, label
 
